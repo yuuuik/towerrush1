@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOWER RUSH — Построй до небес или рухни вниз</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #0d0d15;
+    --bg3: #111120;
+    --purple: #a855f7;
+    --purple-dim: #7c3aed;
+    --cyan: #22d3ee;
+    --pink: #ec4899;
+    --white: #f0f0ff;
+    --gray: #8888aa;
+    --glow-purple: 0 0 20px #a855f780, 0 0 40px #a855f740;
+    --glow-cyan: 0 0 20px #22d3ee80, 0 0 40px #22d3ee40;
+    --glow-pink: 0 0 20px #ec489980, 0 0 40px #ec489940;
+    --border-purple: 1px solid #a855f730;
+    --border-cyan: 1px solid #22d3ee30;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
+
+  /* SCANLINES OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* TYPOGRAPHY */
+  h1, h2, h3 { font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.05em; }
+  .section-title {
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 0.4em;
+    line-height: 1.1;
+  }
+  .section-subtitle {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--gray);
+    margin-bottom: 3rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+  }
+  .text-purple { color: var(--purple); }
+  .text-cyan { color: var(--cyan); }
+  .text-pink { color: var(--pink); }
+
+  /* GRID BG */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(168,85,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* NOISE TEXTURE */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  /* NAVBAR */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 2rem;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(168,85,247,0.3);
+    box-shadow: 0 4px 30px rgba(168,85,247,0.1);
+  }
+  .nav-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--purple);
+    text-shadow: var(--glow-purple);
+    text-decoration: none;
+    letter-spacing: 0.15em;
+  }
+  .nav-logo span { color: var(--cyan); }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--gray);
+    text-decoration: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cyan); text-shadow: var(--glow-cyan); }
+  .nav-cta {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dim));
+    color: white;
+    border: none;
+    padding: 0.6rem 1.4rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all 0.3s;
+    text-decoration: none;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+  .nav-cta:hover { box-shadow: var(--glow-purple); transform: translateY(-1px); }
+
+  /* BURGER */
+  .burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; }
+  .burger span { width: 26px; height: 2px; background: var(--purple); transition: all 0.3s; display: block; }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  /* ANIMATED TOWER SVG */
+  .tower-container {
+    position: relative;
+    width: min(320px, 80vw);
+    height: min(420px, 55vw);
+    margin-bottom: 2.5rem;
+    flex-shrink: 0;
+  }
+  #tower-svg { width: 100%; height: 100%; }
+
+  /* SVG GLOW FILTER */
+  .hero-bg-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(168,85,247,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(168,85,247,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  .hero-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(10,10,15,0.8) 100%);
+    pointer-events: none;
+  }
+
+  .hero-content { position: relative; z-index: 2; }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--cyan);
+    border: 1px solid rgba(34,211,238,0.4);
+    padding: 0.4rem 1rem;
+    margin-bottom: 1.5rem;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    background: rgba(34,211,238,0.05);
+    animation: fadeInDown 0.8s ease both;
+  }
+
+  .hero-title {
+    font-size: clamp(2.2rem, 8vw, 5.5rem);
+    font-weight: 900;
+    line-height: 0.95;
+    margin-bottom: 1.2rem;
+    animation: fadeInUp 0.9s ease 0.2s both;
+  }
+  .hero-title .line1 { color: var(--white); display: block; }
+  .hero-title .line2 {
+    display: block;
+    background: linear-gradient(135deg, var(--purple), var(--pink), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(168,85,247,0.6));
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    color: var(--gray);
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.03em;
+    animation: fadeInUp 0.9s ease 0.4s both;
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.9s ease 0.6s both;
+  }
+
+  /* BUTTONS */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: linear-gradient(135deg, var(--purple), var(--purple-dim));
+    color: white;
+    border: none;
+    padding: 1rem 2.2rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    text-decoration: none;
+    min-height: 56px;
+    transition: all 0.3s;
+    animation: pulse-purple 2s infinite;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+  .btn-primary:hover::before { transform: translateX(100%); }
+  .btn-primary:hover { box-shadow: var(--glow-purple), 0 8px 32px rgba(168,85,247,0.4); transform: translateY(-2px); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid rgba(34,211,238,0.5);
+    padding: 1rem 2.2rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    text-decoration: none;
+    min-height: 56px;
+    transition: all 0.3s;
+  }
+  .btn-secondary:hover {
+    background: rgba(34,211,238,0.1);
+    box-shadow: var(--glow-cyan);
+    transform: translateY(-2px);
+  }
+
+  /* SECTIONS */
+  section {
+    padding: 5rem 2rem;
+    position: relative;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .section-header { text-align: center; margin-bottom: 1rem; }
+  .section-line {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 0.8rem;
+  }
+  .section-line::before, .section-line::after {
+    content: '';
+    flex: 1;
+    max-width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--purple));
+  }
+  .section-line::after { background: linear-gradient(90deg, var(--purple), transparent); }
+  .section-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    color: var(--purple);
+    letter-spacing: 0.3em;
+  }
+
+  /* ABOUT */
+  #about { background: var(--bg2); }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  .about-text p {
+    color: var(--gray);
+    font-size: 1.05rem;
+    margin-bottom: 1.2rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+  .about-text p strong { color: var(--white); font-weight: 500; }
+  .about-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .stat-card {
+    background: rgba(168,85,247,0.05);
+    border: var(--border-purple);
+    padding: 1.5rem;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all 0.3s;
+  }
+  .stat-card:hover {
+    background: rgba(168,85,247,0.1);
+    box-shadow: var(--glow-purple);
+    transform: translateY(-3px);
+  }
+  .stat-card .num {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--purple);
+    display: block;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-card .label { font-size: 0.85rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* HOW TO PLAY */
+  #howto { background: var(--bg); }
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+  .step-card {
+    background: rgba(13,13,21,0.8);
+    border: 1px solid rgba(168,85,247,0.2);
+    padding: 2rem 1.5rem;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    transition: all 0.4s;
+    overflow: hidden;
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .step-card:hover::before { opacity: 1; }
+  .step-card:hover {
+    border-color: var(--purple);
+    box-shadow: var(--glow-purple), inset 0 0 30px rgba(168,85,247,0.05);
+    transform: translateY(-4px);
+  }
+  .step-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 3rem;
+    font-weight: 900;
+    color: rgba(168,85,247,0.15);
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    line-height: 1;
+  }
+  .step-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  .step-card h3 {
+    font-size: 1rem;
+    color: var(--cyan);
+    margin-bottom: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+  .step-card p {
+    color: var(--gray);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+  }
+
+  /* RISKS */
+  #risks { background: var(--bg2); }
+  .risks-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  .risks-table-wrap {
+    overflow-x: auto;
+    border: 1px solid rgba(168,85,247,0.2);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  table th {
+    background: rgba(168,85,247,0.15);
+    padding: 0.9rem 1.2rem;
+    text-align: left;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--purple);
+    border-bottom: 1px solid rgba(168,85,247,0.3);
+  }
+  table td {
+    padding: 0.8rem 1.2rem;
+    border-bottom: 1px solid rgba(168,85,247,0.1);
+    color: var(--gray);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+  table tr:hover td { background: rgba(168,85,247,0.05); }
+  .risk-low { color: #4ade80; }
+  .risk-med { color: #facc15; }
+  .risk-high { color: var(--pink); }
+  .risk-extreme { color: var(--pink); font-weight: 700; text-shadow: 0 0 8px rgba(236,72,153,0.6); }
+
+  .chart-container { space: 1rem 0; }
+  .chart-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .chart-bar-group { margin-bottom: 1rem; }
+  .chart-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-bottom: 0.3rem;
+    font-family: 'Inter', sans-serif;
+  }
+  .chart-bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .chart-bar-fill {
+    height: 100%;
+    border-radius: 0;
+    transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    width: 0;
+  }
+  .bar-purple { background: linear-gradient(90deg, var(--purple-dim), var(--purple)); box-shadow: 0 0 10px rgba(168,85,247,0.5); }
+  .bar-cyan { background: linear-gradient(90deg, #0e7490, var(--cyan)); box-shadow: 0 0 10px rgba(34,211,238,0.5); }
+  .bar-pink { background: linear-gradient(90deg, #9d174d, var(--pink)); box-shadow: 0 0 10px rgba(236,72,153,0.5); }
+  .bar-green { background: linear-gradient(90deg, #065f46, #4ade80); box-shadow: 0 0 10px rgba(74,222,128,0.5); }
+  .bar-yellow { background: linear-gradient(90deg, #713f12, #facc15); box-shadow: 0 0 10px rgba(250,204,21,0.5); }
+
+  /* PROMO */
+  #promo { background: var(--bg); }
+  .promo-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .promo-card {
+    background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(34,211,238,0.04));
+    border: 1px solid rgba(168,85,247,0.25);
+    padding: 2rem;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+    position: relative;
+    transition: all 0.4s;
+    overflow: hidden;
+  }
+  .promo-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, transparent 50%, rgba(168,85,247,0.5) 50%);
+  }
+  .promo-card:hover {
+    border-color: var(--purple);
+    box-shadow: var(--glow-purple);
+    transform: translateY(-5px) scale(1.01);
+  }
+  .promo-card.cyan-card {
+    border-color: rgba(34,211,238,0.25);
+    background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(168,85,247,0.04));
+  }
+  .promo-card.cyan-card::after { background: linear-gradient(135deg, transparent 50%, rgba(34,211,238,0.5) 50%); }
+  .promo-card.cyan-card:hover { border-color: var(--cyan); box-shadow: var(--glow-cyan); }
+  .promo-card.pink-card {
+    border-color: rgba(236,72,153,0.25);
+    background: linear-gradient(135deg, rgba(236,72,153,0.08), rgba(168,85,247,0.04));
+  }
+  .promo-card.pink-card::after { background: linear-gradient(135deg, transparent 50%, rgba(236,72,153,0.5) 50%); }
+  .promo-card.pink-card:hover { border-color: var(--pink); box-shadow: var(--glow-pink); }
+  .promo-badge {
+    display: inline-block;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    padding: 0.25rem 0.7rem;
+    margin-bottom: 1rem;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+  .badge-purple { background: rgba(168,85,247,0.2); color: var(--purple); border: 1px solid rgba(168,85,247,0.4); }
+  .badge-cyan { background: rgba(34,211,238,0.2); color: var(--cyan); border: 1px solid rgba(34,211,238,0.4); }
+  .badge-pink { background: rgba(236,72,153,0.2); color: var(--pink); border: 1px solid rgba(236,72,153,0.4); }
+  .promo-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.7rem;
+    color: var(--white);
+  }
+  .promo-card p {
+    color: var(--gray);
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+  .promo-amount {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    font-weight: 900;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  /* PROMO CODE BLOCK */
+  .promo-code-block {
+    background: rgba(168,85,247,0.05);
+    border: 1px solid rgba(168,85,247,0.3);
+    padding: 2.5rem;
+    text-align: center;
+    position: relative;
+    clip-path: polygon(20px 0%, 100% 0%, calc(100% - 20px) 100%, 0% 100%);
+    overflow: hidden;
+  }
+  .promo-code-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--purple), var(--cyan), var(--pink), transparent);
+    animation: shimmer 3s linear infinite;
+  }
+  .promo-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--gray);
+    margin-bottom: 1rem;
+  }
+  .promo-code-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .promo-code-text {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: var(--glow-cyan);
+    letter-spacing: 0.2em;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid rgba(34,211,238,0.4);
+    background: rgba(34,211,238,0.05);
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .copy-btn {
+    background: rgba(34,211,238,0.1);
+    border: 1px solid rgba(34,211,238,0.5);
+    color: var(--cyan);
+    padding: 0.7rem 1.5rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.3s;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    min-height: 48px;
+  }
+  .copy-btn:hover { background: rgba(34,211,238,0.2); box-shadow: var(--glow-cyan); }
+  .copy-toast {
+    position: fixed;
+    top: 5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(34,211,238,0.15);
+    border: 1px solid rgba(34,211,238,0.5);
+    color: var(--cyan);
+    padding: 0.8rem 2rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s;
+    z-index: 9000;
+    box-shadow: var(--glow-cyan);
+    text-shadow: var(--glow-cyan);
+  }
+  .copy-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .promo-desc {
+    color: var(--gray);
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+  }
+
+  /* STATS */
+  #stats {
+    background: linear-gradient(135deg, var(--bg2), var(--bg));
+    text-align: center;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .stats-item {
+    padding: 2rem 1rem;
+    border: var(--border-purple);
+    background: rgba(168,85,247,0.03);
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  .stats-item::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    transform: scaleX(0);
+    transition: transform 0.4s;
+  }
+  .stats-item:hover::before { transform: scaleX(1); }
+  .stats-item:hover { background: rgba(168,85,247,0.08); box-shadow: var(--glow-purple); }
+  .counter-num {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .stats-item .counter-label {
+    color: var(--gray);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+  }
+
+  /* PLAY CTA SECTION */
+  .play-cta {
+    padding: 4rem 2rem;
+    background: var(--bg2);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .play-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(168,85,247,0.08) 0%, transparent 70%);
+  }
+  .play-cta h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .play-cta p {
+    color: var(--gray);
+    max-width: 500px;
+    margin: 0 auto 2rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    position: relative;
+  }
+  .play-cta .btn-primary { position: relative; margin: 0 auto; }
+
+  /* REVIEWS */
+  #reviews { background: var(--bg); }
+  .carousel {
+    position: relative;
+    overflow: hidden;
+  }
+  .carousel-track {
+    display: flex;
+    gap: 1.5rem;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .review-card {
+    min-width: calc(33.333% - 1rem);
+    background: rgba(13,13,21,0.9);
+    border: var(--border-purple);
+    padding: 2rem;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .review-card:hover {
+    border-color: rgba(168,85,247,0.5);
+    box-shadow: var(--glow-purple);
+  }
+  .review-stars {
+    color: var(--purple);
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+    text-shadow: 0 0 10px rgba(168,85,247,0.5);
+  }
+  .review-text {
+    color: var(--gray);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+  }
+  .review-author {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .review-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 0;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .avatar-purple { background: linear-gradient(135deg, var(--purple), var(--purple-dim)); }
+  .avatar-cyan { background: linear-gradient(135deg, var(--cyan), #0891b2); color: var(--bg); }
+  .avatar-pink { background: linear-gradient(135deg, var(--pink), #9d174d); }
+  .review-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    color: var(--white);
+    font-size: 0.95rem;
+  }
+  .review-meta {
+    font-size: 0.8rem;
+    color: var(--gray);
+    font-family: 'Inter', sans-serif;
+  }
+  .carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .carousel-btn {
+    width: 48px;
+    height: 48px;
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: var(--purple);
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .carousel-btn:hover { background: rgba(168,85,247,0.2); box-shadow: var(--glow-purple); }
+  .carousel-dots {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    background: rgba(168,85,247,0.3);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .dot.active {
+    background: var(--purple);
+    width: 20px;
+    box-shadow: 0 0 8px rgba(168,85,247,0.6);
+  }
+
+  /* FAQ */
+  #faq { background: var(--bg2); }
+  .faq-list { max-width: 800px; margin: 0 auto; }
+  .faq-item {
+    border-bottom: 1px solid rgba(168,85,247,0.15);
+    overflow: hidden;
+  }
+  .faq-item:first-child { border-top: 1px solid rgba(168,85,247,0.15); }
+  .faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.3rem 0;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--white);
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+    gap: 1rem;
+    min-height: 60px;
+  }
+  .faq-q:hover { color: var(--purple); }
+  .faq-icon {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(168,85,247,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+    color: var(--purple);
+    transition: all 0.3s;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+  .faq-item.open .faq-icon {
+    background: rgba(168,85,247,0.15);
+    box-shadow: 0 0 10px rgba(168,85,247,0.3);
+    transform: rotate(45deg);
+  }
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+  }
+  .faq-item.open .faq-a { max-height: 300px; }
+  .faq-a-inner {
+    padding-bottom: 1.3rem;
+    color: var(--gray);
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    border-left: 2px solid var(--purple);
+    padding-left: 1.2rem;
+    margin-left: 0.2rem;
+  }
+  .faq-a-inner strong { color: var(--white); }
+
+  /* FOOTER */
+  footer {
+    background: var(--bg);
+    border-top: 1px solid rgba(168,85,247,0.2);
+    padding: 3rem 2rem 2rem;
+  }
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(168,85,247,0.1);
+  }
+  .footer-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--purple);
+    text-shadow: var(--glow-purple);
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  .footer-logo span { color: var(--cyan); }
+  .footer-desc {
+    color: var(--gray);
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+  }
+  .social-links { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+  .social-link {
+    width: 44px;
+    height: 44px;
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: var(--purple);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+  .social-link:hover { background: rgba(168,85,247,0.2); box-shadow: var(--glow-purple); transform: translateY(-2px); }
+  .footer-col h4 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--purple);
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col ul li { margin-bottom: 0.6rem; }
+  .footer-col ul a {
+    color: var(--gray);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    transition: color 0.2s;
+  }
+  .footer-col ul a:hover { color: var(--cyan); }
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .copyright {
+    color: var(--gray);
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+  }
+  .footer-disclaimer {
+    color: rgba(136,136,170,0.5);
+    font-size: 0.75rem;
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(168,85,247,0.05);
+    line-height: 1.6;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-purple {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.4); }
+    50% { box-shadow: 0 0 0 12px rgba(168,85,247,0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(168,85,247,0.6)); }
+    50% { filter: drop-shadow(0 0 20px rgba(168,85,247,0.9)); }
+  }
+  @keyframes tower-grow {
+    from { opacity: 0; transform: scaleY(0); }
+    to { opacity: 1; transform: scaleY(1); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @keyframes rotate-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes scan {
+    from { top: -100%; }
+    to { top: 200%; }
+  }
+
+  .float-anim { animation: float 3s ease-in-out infinite; }
+  .glow-anim { animation: glow-pulse 2s ease-in-out infinite; }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* MOBILE NAV OVERLAY */
+  .nav-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,15,0.98);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    transform: translateX(100%);
+    transition: transform 0.4s ease;
+  }
+  .nav-overlay.open { transform: translateX(0); }
+  .nav-overlay a {
+    color: var(--white);
+    text-decoration: none;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    letter-spacing: 0.2em;
+    transition: color 0.2s;
+  }
+  .nav-overlay a:hover { color: var(--purple); text-shadow: var(--glow-purple); }
+  .nav-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--gray);
+    font-size: 1.5rem;
+    cursor: pointer;
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .about-grid { grid-template-columns: 1fr; }
+    .risks-wrapper { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr; gap: 2rem; }
+    .review-card { min-width: calc(50% - 0.75rem); }
+  }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-cta { display: none; }
+    .burger { display: flex; }
+
+    section { padding: 4rem 1.2rem; }
+    .section-title { font-size: clamp(1.4rem, 6vw, 2rem); }
+
+    .about-stats { grid-template-columns: 1fr 1fr; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .promo-cards { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .footer-top { grid-template-columns: 1fr; }
+
+    .review-card { min-width: calc(100% - 0); }
+    .carousel-track { gap: 1rem; }
+
+    .hero-buttons { flex-direction: column; align-items: center; }
+    .btn-primary, .btn-secondary {
+      width: 100%;
+      max-width: 320px;
+      justify-content: center;
+    }
+
+    .footer-bottom { flex-direction: column; text-align: center; }
+    .promo-code-display { flex-direction: column; }
+    .promo-code-text { font-size: 1.5rem; }
+  }
+
+  @media (max-width: 480px) {
+    nav { padding: 0.8rem 1rem; }
+    .nav-logo { font-size: 1rem; }
+    .about-stats { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .stats-item { padding: 1.5rem 0.8rem; }
+    .counter-num { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="copy-toast" id="copyToast">✓ ПРОМОКОД СКОПИРОВАН</div>
+
+<!-- MOBILE NAV OVERLAY -->
+<div class="nav-overlay" id="navOverlay">
+  <button class="nav-close" onclick="toggleNav()">✕</button>
+  <a href="#about" onclick="toggleNav()">О ИГРЕ</a>
+  <a href="#howto" onclick="toggleNav()">КАК ИГРАТЬ</a>
+  <a href="#risks" onclick="toggleNav()">РИСКИ</a>
+  <a href="#promo" onclick="toggleNav()">БОНУСЫ</a>
+  <a href="#stats" onclick="toggleNav()">СТАТИСТИКА</a>
+  <a href="#reviews" onclick="toggleNav()">ОТЗЫВЫ</a>
+  <a href="#faq" onclick="toggleNav()">FAQ</a>
+  <a href="#" class="btn-primary" style="clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%); padding: 1rem 2.2rem; font-size:0.8rem; text-align:center;">ИГРАТЬ СЕЙЧАС</a>
+</div>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="nav-logo">TOWER<span>RUSH</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">О ИГРЕ</a></li>
+    <li><a href="#howto">КАК ИГРАТЬ</a></li>
+    <li><a href="#risks">РИСКИ</a></li>
+    <li><a href="#promo">БОНУСЫ</a></li>
+    <li><a href="#stats">СТАТИСТИКА</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#" class="nav-cta">ИГРАТЬ СЕЙЧАС</a>
+  <div class="burger" onclick="toggleNav()" aria-label="Меню">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-vignette"></div>
+
+  <div class="tower-container float-anim">
+    <svg id="tower-svg" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow-purple">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+        <filter id="glow-cyan">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+        <linearGradient id="towerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#7c3aed"/>
+          <stop offset="50%" stop-color="#a855f7"/>
+          <stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+        <linearGradient id="windowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#a855f7" stop-opacity="0.7"/>
+        </linearGradient>
+        <linearGradient id="beamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#22d3ee" stop-opacity="0"/>
+          <stop offset="50%" stop-color="#22d3ee" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Ground grid -->
+      <g opacity="0.3">
+        <line x1="20" y1="390" x2="280" y2="390" stroke="#a855f7" stroke-width="0.5"/>
+        <line x1="10" y1="395" x2="290" y2="395" stroke="#a855f7" stroke-width="0.3"/>
+        <!-- Perspective lines -->
+        <line x1="150" y1="340" x2="20" y2="390" stroke="#a855f7" stroke-width="0.5" opacity="0.5"/>
+        <line x1="150" y1="340" x2="280" y2="390" stroke="#a855f7" stroke-width="0.5" opacity="0.5"/>
+        <line x1="150" y1="340" x2="60" y2="395" stroke="#a855f7" stroke-width="0.3" opacity="0.3"/>
+        <line x1="150" y1="340" x2="240" y2="395" stroke="#a855f7" stroke-width="0.3" opacity="0.3"/>
+      </g>
+
+      <!-- Tower base platform -->
+      <ellipse cx="150" cy="355" rx="80" ry="12" fill="#0d0d15" stroke="#a855f7" stroke-width="1" opacity="0.8"/>
+      <ellipse cx="150" cy="355" rx="80" ry="12" fill="none" stroke="#a855f7" stroke-width="1.5" filter="url(#glow-purple)" opacity="0.4"/>
+
+      <!-- TOWER BODY - sections with animation -->
+      <!-- Floor 1 -->
+      <g class="tower-section" style="transform-origin:150px 355px; animation: tower-grow 0.4s ease 0.1s both;">
+        <polygon points="100,355 200,355 195,320 105,320" fill="url(#towerGrad)" opacity="0.9"/>
+        <polygon points="100,355 200,355 195,320 105,320" fill="none" stroke="#a855f7" stroke-width="0.8"/>
+        <rect x="115" y="328" width="14" height="12" fill="url(#windowGrad)" opacity="0.8"/>
+        <rect x="143" y="328" width="14" height="12" fill="url(#windowGrad)" opacity="0.6">
+          <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="171" y="328" width="14" height="12" fill="url(#windowGrad)" opacity="0.8"/>
+        <line x1="105" y1="320" x2="195" y2="320" stroke="#22d3ee" stroke-width="1.5" opacity="0.6"/>
+      </g>
+
+      <!-- Floor 2 -->
+      <g class="tower-section" style="transform-origin:150px 320px; animation: tower-grow 0.4s ease 0.3s both;">
+        <polygon points="108,320 192,320 186,285 114,285" fill="url(#towerGrad)" opacity="0.88"/>
+        <polygon points="108,320 192,320 186,285 114,285" fill="none" stroke="#a855f7" stroke-width="0.8"/>
+        <rect x="120" y="293" width="12" height="10" fill="url(#windowGrad)" opacity="0.7"/>
+        <rect x="144" y="293" width="12" height="10" fill="url(#windowGrad)" opacity="0.9">
+          <animate attributeName="opacity" values="0.9;0.4;0.9" dur="2s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="168" y="293" width="12" height="10" fill="url(#windowGrad)" opacity="0.7"/>
+        <line x1="114" y1="285" x2="186" y2="285" stroke="#22d3ee" stroke-width="1.5" opacity="0.6"/>
+      </g>
+
+      <!-- Floor 3 -->
+      <g class="tower-section" style="transform-origin:150px 285px; animation: tower-grow 0.4s ease 0.5s both;">
+        <polygon points="116,285 184,285 178,250 122,250" fill="url(#towerGrad)" opacity="0.86"/>
+        <polygon points="116,285 184,285 178,250 122,250" fill="none" stroke="#a855f7" stroke-width="0.8"/>
+        <rect x="126" y="258" width="11" height="9" fill="url(#windowGrad)" opacity="0.8"/>
+        <rect x="145" y="258" width="11" height="9" fill="url(#windowGrad)" opacity="0.6">
+          <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="164" y="258" width="11" height="9" fill="url(#windowGrad)" opacity="0.8"/>
+        <line x1="122" y1="250" x2="178" y2="250" stroke="#22d3ee" stroke-width="1.5" opacity="0.7"/>
+      </g>
+
+      <!-- Floor 4 -->
+      <g class="tower-section" style="transform-origin:150px 250px; animation: tower-grow 0.4s ease 0.7s both;">
+        <polygon points="124,250 176,250 170,215 130,215" fill="url(#towerGrad)" opacity="0.84"/>
+        <polygon points="124,250 176,250 170,215 130,215" fill="none" stroke="#a855f7" stroke-width="0.8"/>
+        <rect x="132" y="223" width="10" height="8" fill="url(#windowGrad)" opacity="0.9"/>
+        <rect x="147" y="223" width="10" height="8" fill="url(#windowGrad)" opacity="0.5">
+          <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="162" y="223" width="10" height="8" fill="url(#windowGrad)" opacity="0.7"/>
+        <line x1="130" y1="215" x2="170" y2="215" stroke="#22d3ee" stroke-width="1.5" opacity="0.8"/>
+      </g>
+
+      <!-- Floor 5 -->
+      <g class="tower-section" style="transform-origin:150px 215px; animation: tower-grow 0.4s ease 0.9s both;">
+        <polygon points="132,215 168,215 163,180 137,180" fill="url(#towerGrad)" opacity="0.82"/>
+        <polygon points="132,215 168,215 163,180 137,180" fill="none" stroke="#a855f7" stroke-width="0.8"/>
+        <rect x="139" y="188" width="9" height="7" fill="url(#windowGrad)" opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="1s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="153" y="188" width="9" height="7" fill="url(#windowGrad)" opacity="0.9"/>
+        <line x1="137" y1="180" x2="163" y2="180" stroke="#22d3ee" stroke-width="1.5" opacity="0.9"/>
+      </g>
+
+      <!-- Spire -->
+      <g style="animation: tower-grow 0.5s ease 1.1s both; transform-origin: 150px 180px;">
+        <polygon points="137,180 163,180 155,130 145,130" fill="url(#towerGrad)" opacity="0.9"/>
+        <polygon points="145,130 155,130 150,70" fill="url(#towerGrad)"/>
+        <line x1="150" y1="70" x2="150" y2="30" stroke="#22d3ee" stroke-width="2" filter="url(#glow-cyan)"/>
+        <!-- Rotating ring -->
+        <ellipse cx="150" cy="140" rx="18" ry="5" fill="none" stroke="#22d3ee" stroke-width="1" opacity="0.7" filter="url(#glow-cyan)">
+          <animateTransform attributeName="transform" type="rotate" from="0 150 140" to="360 150 140" dur="3s" repeatCount="indefinite"/>
+        </ellipse>
+        <!-- Top beacon -->
+        <circle cx="150" cy="28" r="5" fill="#22d3ee" filter="url(#glow-cyan)">
+          <animate attributeName="opacity" values="1;0.2;1" dur="0.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="150" cy="28" r="10" fill="none" stroke="#22d3ee" stroke-width="1" opacity="0.4">
+          <animate attributeName="r" values="10;18;10" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.4;0;0.4" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+
+      <!-- Scan line effect -->
+      <rect x="90" y="-40" width="120" height="30" fill="url(#beamGrad)" opacity="0.6">
+        <animate attributeName="y" values="-40;400;-40" dur="4s" repeatCount="indefinite"/>
+      </rect>
+
+      <!-- Side glow lines -->
+      <line x1="90" y1="355" x2="75" y2="200" stroke="#a855f7" stroke-width="0.5" opacity="0.2"/>
+      <line x1="210" y1="355" x2="225" y2="200" stroke="#a855f7" stroke-width="0.5" opacity="0.2"/>
+
+      <!-- Decorative corner brackets -->
+      <g opacity="0.5">
+        <polyline points="40,30 40,10 60,10" fill="none" stroke="#a855f7" stroke-width="1"/>
+        <polyline points="260,30 260,10 240,10" fill="none" stroke="#a855f7" stroke-width="1"/>
+        <polyline points="40,370 40,390 60,390" fill="none" stroke="#a855f7" stroke-width="1"/>
+        <polyline points="260,370 260,390 240,390" fill="none" stroke="#a855f7" stroke-width="1"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-tag">⚡ TOWER RUSH — ИГРА НА ВЫЖИВАНИЕ</div>
+    <h1 class="hero-title">
+      <span class="line1">ПОСТРОЙ</span>
+      <span class="line2">ДО НЕБЕС</span>
+    </h1>
+    <p class="hero-subtitle">или рухни вниз — каждый уровень ставки</p>
+    <div class="hero-buttons">
+      <a href="#" class="btn-primary">▶ ИГРАТЬ СЕЙЧАС</a>
+      <a href="#howto" class="btn-secondary">КАК ИГРАТЬ</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-line"><span class="section-num">// 01</span></div>
+      <h2 class="section-title">О <span class="text-purple">ИГРЕ</span></h2>
+      <p class="section-subtitle">Самая захватывающая краш-игра нового поколения</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p><strong>Tower Rush</strong> — это революционная игра в жанре «краш», где вы возводите виртуальную башню этаж за этажом, а ваш множитель растёт с каждым новым уровнем. Чем выше башня — тем больше выигрыш. Но в любой момент она может обрушиться.</p>
+        <p>Игра работает на основе <strong>криптографически верифицированного алгоритма</strong>, который гарантирует полную честность каждого раунда. Никаких манипуляций, никаких скрытых настроек — только математика и удача.</p>
+        <p>С момента запуска Tower Rush стала одной из самых популярных игр в СНГ. Более <strong>2,3 миллиона игроков</strong> уже испытали острые ощущения от роста множителя и момент, когда нужно принять главное решение: забрать выигрыш или рискнуть ещё.</p>
+        <p>Минимальная ставка — <strong>всего 10 рублей</strong>. Максимальный множитель не ограничен — зафиксированный рекорд составляет <strong>×8247</strong>. Каждый раунд уникален, и именно это делает Tower Rush непредсказуемо захватывающим.</p>
+      </div>
+      <div class="about-stats reveal">
+        <div class="stat-card">
+          <span class="num">×8247</span>
+          <span class="label">Рекорд множителя</span>
+        </div>
+        <div class="stat-card">
+          <span class="num">2.3M+</span>
+          <span class="label">Игроков онлайн</span>
+        </div>
+        <div class="stat-card">
+          <span class="num">10₽</span>
+          <span class="label">Минимальная ставка</span>
+        </div>
+        <div class="stat-card">
+          <span class="num">97%</span>
+          <span class="label">Честный RTP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO PLAY -->
+<section id="howto" class="grid-bg">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-line"><span class="section-num">// 02</span></div>
+      <h2 class="section-title">КАК <span class="text-cyan">ИГРАТЬ</span></h2>
+      <p class="section-subtitle">Пять простых шагов к первой победе</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <span class="step-num">01</span>
+        <span class="step-icon">🔑</span>
+        <h3>РЕГИСТРАЦИЯ</h3>
+        <p>Создайте аккаунт за 30 секунд. Никаких лишних данных — только email и пароль. Используйте промокод MARCHTOWER для активации бонуса.</p>
+      </div>
+      <div class="step-card reveal">
+        <span class="step-num">02</span>
+        <span class="step-icon">💳</span>
+        <h3>ПОПОЛНЕНИЕ СЧЁТА</h3>
+        <p>Внесите депозит удобным способом: банковская карта, СБП, крипта или e-кошелёк. Минимальный депозит — 100 рублей, зачисление мгновенное.</p>
+      </div>
+      <div class="step-card reveal">
+        <span class="step-num">03</span>
+        <span class="step-icon">🏗️</span>
+        <h3>ДЕЛАЙТЕ СТАВКУ</h3>
+        <p>Выберите сумму ставки перед началом раунда. Можно поставить сразу на два исхода с разными параметрами авто-вывода.</p>
+      </div>
+      <div class="step-card reveal">
+        <span class="step-num">04</span>
+        <span class="step-icon">📈</span>
+        <h3>СЛЕДИТЕ ЗА РОСТОМ</h3>
+        <p>Башня начинает расти — вместе с ней растёт ваш множитель. ×1.5, ×2, ×5, ×10... Чем дольше держите — тем больше возможный выигрыш.</p>
+      </div>
+      <div class="step-card reveal">
+        <span class="step-num">05</span>
+        <span class="step-icon">⚡</span>
+        <h3>ВЫВОДИТЕ ВОВРЕМЯ</h3>
+        <p>Нажмите «Забрать» до обрушения башни. Или настройте авто-вывод на нужном коэффициенте. Главное — не упустить момент!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RISKS & TIPS -->
+<section id="risks">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-line"><span class="section-num">// 03</span></div>
+      <h2 class="section-title">СОВЕТЫ <span class="text-pink">И РИСКИ</span></h2>
+      <p class="section-subtitle">Математика выживания в Tower Rush</p>
+    </div>
+    <div class="risks-wrapper">
+      <div class="reveal">
+        <div class="risks-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>УРОВЕНЬ</th>
+                <th>МНОЖИТЕЛЬ</th>
+                <th>ШАНС КРАША</th>
+                <th>РИСК</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Этаж 1–2</td><td>×1.1 – ×1.5</td><td>~3%</td><td class="risk-low">НИЗКИЙ</td></tr>
+              <tr><td>Этаж 3–5</td><td>×1.5 – ×3.0</td><td>~12%</td><td class="risk-low">НИЗКИЙ</td></tr>
+              <tr><td>Этаж 6–8</td><td>×3.0 – ×5.0</td><td>~28%</td><td class="risk-med">СРЕДНИЙ</td></tr>
+              <tr><td>Этаж 9–12</td><td>×5.0 – ×10</td><td>~47%</td><td class="risk-med">СРЕДНИЙ</td></tr>
+              <tr><td>Этаж 13–20</td><td>×10 – ×50</td><td>~73%</td><td class="risk-high">ВЫСОКИЙ</td></tr>
+              <tr><td>Этаж 20+</td><td>×50 – ∞</td><td>>90%</td><td class="risk-extreme">ЭКСТРИМ</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:1.5rem; padding: 1.2rem; background: rgba(236,72,153,0.05); border-left: 3px solid var(--pink);">
+          <p style="color:var(--gray); font-size:0.9rem; font-family:'Inter',sans-serif; font-weight:300; line-height:1.7;">
+            <strong style="color:var(--pink);">⚠ Важно:</strong> Игра содержит элементы риска. Устанавливайте лимиты на сессию, используйте авто-вывод и никогда не играйте на средства, которые не можете позволить себе потерять.
+          </p>
+        </div>
+      </div>
+      <div class="chart-container reveal">
+        <p class="chart-title">Вероятность успешного вывода по множителю</p>
+        <div class="chart-bar-group">
+          <div class="chart-bar-label"><span>×1.5</span><span style="color:var(--white)">94%</span></div>
+          <div class="chart-bar-track"><div class="chart-bar-fill bar-green" data-width="94"></div></div>
+        </div>
+        <div class="chart-bar-group">
+          <div class="chart-bar-label"><span>×2.0</span><span style="color:var(--white)">85%</span></div>
+          <div class="chart-bar-track"><div class="chart-bar-fill bar-cyan" data-width="85"></div></div>
+        </div>
+        <div class="chart-bar-group">
+          <div class="chart-bar-label"><span>×5.0</span><span style="color:var(--white)">62%</span></div>
+          <div class="chart-bar-track"><div class="chart-bar-fill bar-purple" data-width="62"></div></div>
+        </div>
+        <div class="chart-bar-group">
+          <div class="chart-bar-label"><span>×10</span><span style="color:var(--white)">41%</span></div>
+          <div class="chart-bar-track"><div class="chart-bar-fill bar-yellow" data-width="41"></div></div>
+        </div>
+        <div class="chart-bar-group">
+          <div class="chart-bar-label"><span>×50</span><span style="color:var(--white)">18%</span></div>
+          <div class="chart-bar-track"><div class="chart-bar-fill bar-pink" data-width="18"></div></div>
+        </div>
+        <div class="chart-bar-group">
+          <div class="chart-bar-label"><span>×100+</span><span style="color:var(--white)">7%</span></div>
+          <div class="chart-bar-track"><div class="chart-bar-fill bar-pink" data-width="7"></div></div>
+        </div>
+
+        <div style="margin-top:2rem;">
+          <p class="chart-title">Популярные стратегии игроков</p>
+          <div style="display:flex; flex-direction:column; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+              <div style="width:12px; height:12px; background:var(--cyan); flex-shrink:0;"></div>
+              <span style="font-size:0.85rem; color:var(--gray); font-family:'Inter',sans-serif;">Авто-вывод ×1.5 (консервативная)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+              <div style="width:12px; height:12px; background:var(--purple); flex-shrink:0;"></div>
+              <span style="font-size:0.85rem; color:var(--gray); font-family:'Inter',sans-serif;">Авто-вывод ×2–×3 (сбалансированная)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+              <div style="width:12px; height:12px; background:var(--pink); flex-shrink:0;"></div>
+              <span style="font-size:0.85rem; color:var(--gray); font-family:'Inter',sans-serif;">Ручной вывод на ×5+ (агрессивная)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+              <div style="width:12px; height:12px; background:#facc15; flex-shrink:0;"></div>
+              <span style="font-size:0.85rem; color:var(--gray); font-family:'Inter',sans-serif;">Мартингейл с ×2 авто (рискованная)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAY CTA 1 -->
+<div class="play-cta">
+  <div class="container">
+    <h2 class="section-title reveal">ГОТОВ <span class="text-purple">РИСКНУТЬ?</span></h2>
+    <p class="reveal">Тысячи игроков уже строят свои башни. Твоя очередь войти в историю.</p>
+    <a href="#" class="btn-primary reveal">⚡ ИГРАТЬ СЕЙЧАС — БЕСПЛАТНО</a>
+  </div>
+</div>
+
+<!-- PROMO & BONUSES -->
+<section id="promo">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-line"><span class="section-num">// 04</span></div>
+      <h2 class="section-title">БОНУСЫ И <span class="text-cyan">ПРОМОКОДЫ</span></h2>
+      <p class="section-subtitle">Начни с преимуществом перед другими игроками</p>
+    </div>
+
+    <div class="promo-cards">
+      <div class="promo-card reveal">
+        <span class="promo-badge badge-purple">🎁 НОВИЧКАМ</span>
+        <h3>Приветственный бонус</h3>
+        <p>Удвоение первого депозита для всех новых игроков. Активируется автоматически при регистрации.</p>
+        <span class="promo-amount text-purple">+100% к депозиту</span>
+        <small style="color:var(--gray); font-size:0.8rem; font-family:'Inter', sans-serif;">до 50 000 ₽</small>
+      </div>
+      <div class="promo-card cyan-card reveal">
+        <span class="promo-badge badge-cyan">⚡ ЕЖЕНЕДЕЛЬНО</span>
+        <h3>Кэшбэк башни</h3>
+        <p>Каждую пятницу возвращаем 15% от проигранных за неделю средств. Без вейджера.</p>
+        <span class="promo-amount text-cyan">15% кэшбэк</span>
+        <small style="color:var(--gray); font-size:0.8rem; font-family:'Inter', sans-serif;">каждую пятницу</small>
+      </div>
+      <div class="promo-card pink-card reveal">
+        <span class="promo-badge badge-pink">🏆 ВИП</span>
+        <h3>Реферальная программа</h3>
+        <p>Приглашай друзей и получай 5% от каждой их ставки навсегда. Без ограничений.</p>
+        <span class="promo-amount text-pink">5% навсегда</span>
+        <small style="color:var(--gray); font-size:0.8rem; font-family:'Inter', sans-serif;">от ставок друзей</small>
+      </div>
+    </div>
+
+    <!-- PROMO CODE BLOCK -->
+    <div class="promo-code-block reveal">
+      <p class="promo-label">// ЭКСКЛЮЗИВНЫЙ ПРОМОКОД МАРТА //</p>
+      <div class="promo-code-display">
+        <div class="promo-code-text" id="promoCode">MARCHTOWER</div>
+        <button class="copy-btn" onclick="copyPromo()">📋 КОПИРОВАТЬ</button>
+      </div>
+      <p class="promo-desc">Введи при регистрации и получи <strong style="color:var(--cyan)">+50 фриспинов</strong> + <strong style="color:var(--purple)">бонус ×1.5 к первому депозиту</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-line"><span class="section-num">// 05</span></div>
+      <h2 class="section-title">ЖИВАЯ <span class="text-purple">СТАТИСТИКА</span></h2>
+      <p class="section-subtitle">Реальные данные Tower Rush в цифрах</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stats-item reveal">
+        <span class="counter-num text-purple" data-target="2347891">0</span>
+        <span class="counter-label">Игроков зарегистрировано</span>
+      </div>
+      <div class="stats-item reveal">
+        <span class="counter-num text-cyan" data-target="8247" data-prefix="×">×0</span>
+        <span class="counter-label">Рекорд множителя</span>
+      </div>
+      <div class="stats-item reveal">
+        <span class="counter-num text-pink" data-target="147" data-suffix="M₽">0M₽</span>
+        <span class="counter-label">Выплачено игрокам</span>
+      </div>
+      <div class="stats-item reveal">
+        <span class="counter-num text-purple" data-target="97" data-suffix="%">0%</span>
+        <span class="counter-label">RTP (отдача)</span>
+      </div>
+      <div class="stats-item reveal">
+        <span class="counter-num text-cyan" data-target="43218">0</span>
+        <span class="counter-label">Онлайн прямо сейчас</span>
+      </div>
+      <div class="stats-item reveal">
+        <span class="counter-num text-pink" data-target="4" data-suffix=" сек">0 сек</span>
+        <span class="counter-label">Среднее время раунда</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews" style="background: var(--bg2);">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-line"><span class="section-num">// 06</span></div>
+      <h2 class="section-title">ОТЗЫВЫ <span class="text-cyan">ИГРОКОВ</span></h2>
+      <p class="section-subtitle">Что говорят те, кто уже строит башни</p>
+    </div>
+    <div class="carousel reveal">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">«Поставил 500 рублей, дождался ×12 и снял. Купил себе новый монитор. Теперь играю каждый вечер по чуть-чуть, держу строгий лимит.»</p>
+          <div class="review-author">
+            <div class="review-avatar avatar-purple">AK</div>
+            <div><p class="review-name">Алексей К.</p><p class="review-meta">Москва · 3 месяца в игре</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">«Использовала промокод при регистрации, получила двойной бонус. На эти деньги выиграла ×25 — вывела без проблем за 15 минут. Круто!»</p>
+          <div class="review-author">
+            <div class="review-avatar avatar-pink">МС</div>
+            <div><p class="review-name">Марина С.</p><p class="review-meta">Спб · 5 месяцев в игре</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★☆</div>
+          <p class="review-text">«Честная игра, быстрые выплаты. Удалось поймать раунд ×341 — именно в тот момент, когда хотел выйти пораньше. Держу авто-вывод на ×2.»</p>
+          <div class="review-author">
+            <div class="review-avatar avatar-cyan">ДЛ</div>
+            <div><p class="review-name">Дима Л.</p><p class="review-meta">Екб · 7 месяцев в игре</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">«Сначала скептически относился, но верификация провайдера убедила. RTP честный, криптовая проверка работает. Рекомендую новичкам начинать с малых ставок.»</p>
+          <div class="review-author">
+            <div class="review-avatar avatar-purple">ИВ</div>
+            <div><p class="review-name">Игорь В.</p><p class="review-meta">Новосибирск · 1 год в игре</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">«Кэшбэк каждую пятницу — это реально помогает. Не чувствуешь себя в минусе после неудачной недели. Поддержка отвечает быстро, всё чётко.»</p>
+          <div class="review-author">
+            <div class="review-avatar avatar-pink">ОН</div>
+            <div><p class="review-name">Ольга Н.</p><p class="review-meta">Краснодар · 4 месяца в игре</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★☆</div>
+          <p class="review-text">«Играю консервативно — всегда авто на ×1.8. Небольшой, но стабильный плюс. Башня — это не казино в классическом смысле, здесь важна дисциплина.»</p>
+          <div class="review-author">
+            <div class="review-avatar avatar-cyan">ПА</div>
+            <div><p class="review-name">Павел А.</p><p class="review-meta">Казань · 8 месяцев в игре</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="carousel-controls">
+      <button class="carousel-btn" onclick="slideCarousel(-1)">←</button>
+      <div class="carousel-dots" id="carouselDots"></div>
+      <button class="carousel-btn" onclick="slideCarousel(1)">→</button>
+    </div>
+  </div>
+</section>
+
+<!-- PLAY CTA 2 -->
+<div class="play-cta" style="background:var(--bg);">
+  <div class="container">
+    <h2 class="section-title reveal">НАЧНИ <span class="text-cyan">ПРЯМО СЕЙЧАС</span></h2>
+    <p class="reveal">Регистрация займёт 30 секунд. Первый раунд может изменить всё.</p>
+    <a href="#" class="btn-primary reveal" style="font-size:1rem; padding:1.2rem 3rem;">🏗️ СТРОИТЬ БАШНЮ</a>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-line"><span class="section-num">// 07</span></div>
+      <h2 class="section-title">ЧАСТЫЕ <span class="text-purple">ВОПРОСЫ</span></h2>
+      <p class="section-subtitle">Всё, что нужно знать перед первой игрой</p>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Честная ли игра Tower Rush?</span>
+          <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Да. Tower Rush использует <strong>Provably Fair</strong> — технологию криптографической проверки. Каждый раунд можно верифицировать после завершения, используя хеш сервера и seed игрока. Результат формируется до начала раунда и не может быть изменён.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Как быстро выводятся деньги?</span>
+          <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Выводы на карты и СБП обрабатываются за <strong>15–30 минут</strong>. Криптовалюта — 1–3 подтверждения сети (обычно до 10 минут). Первый вывод может потребовать верификацию документов — это стандартная процедура для защиты вашего счёта.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Что такое авто-вывод и как его настроить?</span>
+          <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Авто-вывод — функция, которая автоматически фиксирует выигрыш при достижении заданного множителя. Например, если вы поставили ×3, система заберёт деньги, когда башня достигнет этого уровня, даже если вы отвлеклись. Настраивается в поле «Авто» перед каждым раундом.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Как использовать промокод MARCHTOWER?</span>
+          <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">При регистрации найдите поле «Промокод» и введите <strong>MARCHTOWER</strong>. После первого депозита бонус активируется автоматически: вы получаете +50 фриспинов и коэффициент ×1.5 к сумме пополнения. Предложение действует только для новых аккаунтов.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Есть ли мобильное приложение?</span>
+          <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Tower Rush доступна в браузере на любом устройстве — смартфон, планшет, ПК. Сайт полностью адаптирован для мобильных. Нативные приложения для iOS и Android находятся в разработке и будут доступны в ближайшее время.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Какова минимальная и максимальная ставка?</span>
+          <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Минимальная ставка — <strong>10 рублей</strong>, максимальная — <strong>100 000 рублей</strong> за раунд. ВИП-игроки могут запросить увеличение лимита через службу поддержки. Можно делать до двух одновременных ставок в одном раунде с разными параметрами.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Что делать, если возникла проблема с платежом?</span>
+          <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Свяжитесь с поддержкой в онлайн-чате (работает 24/7) или напишите на support@towerrush.game. Укажите ID транзакции и описание проблемы. Большинство вопросов решается в течение одного часа. Для срочных случаев доступна горячая линия.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <span class="footer-logo">TOWER<span>RUSH</span></span>
+        <p class="footer-desc">Революционная краш-игра нового поколения с честным RTP и мгновенными выплатами. Строй выше. Забирай умнее.</p>
+        <div class="social-links">
+          <a href="#" class="social-link" title="Telegram">✈</a>
+          <a href="#" class="social-link" title="VK">VK</a>
+          <a href="#" class="social-link" title="YouTube">▶</a>
+          <a href="#" class="social-link" title="Instagram">◈</a>
+          <a href="#" class="social-link" title="Discord">⚙</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Навигация</h4>
+        <ul>
+          <li><a href="#about">О игре</a></li>
+          <li><a href="#howto">Как играть</a></li>
+          <li><a href="#risks">Советы</a></li>
+          <li><a href="#promo">Бонусы</a></li>
+          <li><a href="#stats">Статистика</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Поддержка</h4>
+        <ul>
+          <li><a href="#">Онлайн-чат</a></li>
+          <li><a href="#">Правила игры</a></li>
+          <li><a href="#">Ответственная игра</a></li>
+          <li><a href="#">Партнёрам</a></li>
+          <li><a href="#">Конфиденциальность</a></li>
+          <li><a href="#">Контакты</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="copyright">© 2025 Tower Rush. Все права защищены.</p>
+      <div style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;">
+        <span style="color:var(--gray); font-size:0.8rem; font-family:'Inter',sans-serif;">18+</span>
+        <span style="color:rgba(136,136,170,0.5); font-size:0.8rem; font-family:'Inter',sans-serif;">Лицензия №TR-2024-001</span>
+      </div>
+    </div>
+    <p class="footer-disclaimer">
+      ⚠ Игра предназначена только для лиц старше 18 лет. Азартные игры сопряжены с риском потери средств. Играйте ответственно. Если вы испытываете проблемы с азартными играми, обратитесь за помощью: 8-800-700-41-93 (бесплатно, круглосуточно). Tower Rush — это развлечение, а не способ заработка.
+    </p>
+  </div>
+</footer>
+
+<script>
+  // MOBILE NAV
+  function toggleNav() {
+    document.getElementById('navOverlay').classList.toggle('open');
+  }
+
+  // COPY PROMO
+  function copyPromo() {
+    navigator.clipboard.writeText('MARCHTOWER').then(() => {
+      const toast = document.getElementById('copyToast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    });
+  }
+
+  // FAQ ACCORDION
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  }
+
+  // SCROLL REVEAL
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+  reveals.forEach(r => observer.observe(r));
+
+  // COUNTER ANIMATION
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.target);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    const duration = 2000;
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(target * eased);
+      el.textContent = prefix + current.toLocaleString('ru') + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.counter-num[data-target]').forEach(el => counterObserver.observe(el));
+
+  // BAR CHART ANIMATION
+  const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.chart-bar-fill').forEach((bar, i) => {
+          setTimeout(() => {
+            bar.style.width = bar.dataset.width + '%';
+          }, i * 150);
+        });
+        barObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.chart-container').forEach(el => barObserver.observe(el));
+
+  // CAROUSEL
+  let currentSlide = 0;
+  const track = document.getElementById('carouselTrack');
+  const dotsContainer = document.getElementById('carouselDots');
+  let cards, totalSlides, visibleCount;
+
+  function initCarousel() {
+    cards = track.querySelectorAll('.review-card');
+    const w = window.innerWidth;
+    visibleCount = w > 900 ? 3 : w > 600 ? 2 : 1;
+    totalSlides = Math.max(0, cards.length - visibleCount);
+    dotsContainer.innerHTML = '';
+    for (let i = 0; i <= totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+    goToSlide(0);
+  }
+
+  function goToSlide(n) {
+    currentSlide = Math.max(0, Math.min(n, totalSlides));
+    const cardWidth = cards[0].offsetWidth + 24; // gap
+    track.style.transform = `translateX(-${currentSlide * cardWidth}px)`;
+    dotsContainer.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+  }
+
+  function slideCarousel(dir) { goToSlide(currentSlide + dir); }
+
+  window.addEventListener('resize', initCarousel);
+  setTimeout(initCarousel, 100);
+
+  // AUTO SLIDE
+  setInterval(() => {
+    if (currentSlide >= totalSlides) goToSlide(0);
+    else slideCarousel(1);
+  }, 4000);
+
+  // TOUCH SWIPE
+  let touchStartX = 0;
+  track.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, { passive: true });
+  track.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) slideCarousel(dx > 0 ? -1 : 1);
+  }, { passive: true });
+</script>
+</body>
+</html>
