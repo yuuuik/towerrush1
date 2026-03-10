@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://towercrash.vercel.app/sitemap.xml
