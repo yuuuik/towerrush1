@@ -1259,10 +1259,16 @@
     return +(current * (1 + growth)).toFixed(2);
   }
 
-  // Вероятность краша ~20% за попытку построить этаж
-  // Это значит: до 3 этажа доходит ~51%, до 5 — ~33%, до 10 — ~11%, до 18 — ~1.5%
-  function simCrashChance() {
-    return Math.random() < 0.20;
+  // Вероятность краша зависит от текущего коэффициента:
+  // до ×3  — ~10% (легко добраться до первых этажей)
+  // ×3–×5  — ~18% (умеренный риск)
+  // ×5–×10 — ~28% (ощутимый риск)
+  // ×10+   — ~38% (высокий риск, дальше редкость)
+  function simCrashChance(currentMult) {
+    if (currentMult < 3)  return Math.random() < 0.10;
+    if (currentMult < 5)  return Math.random() < 0.18;
+    if (currentMult < 10) return Math.random() < 0.28;
+    return Math.random() < 0.38;
   }
 
   function simUpdateDisplay(multText, status, crashed) {
@@ -1301,7 +1307,7 @@
     }
 
     // Попытка построить следующий этаж
-    if (simCrashChance()) {
+    if (simCrashChance(simCurrentMult)) {
       // КРАШ
       simInRound = false;
       simTotalRounds++;
